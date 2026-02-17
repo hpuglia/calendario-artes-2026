@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -17,6 +16,7 @@ import { UserEventData } from "@/lib/storage";
 import { Event } from "./calendar-view";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, CalendarPlus, Save, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface EventModalProps {
   isOpen: boolean;
@@ -28,13 +28,9 @@ interface EventModalProps {
 }
 
 export default function EventModal({ isOpen, onClose, date, events, userData, onSave }: EventModalProps) {
-  // Syncing state with current user data or default
-  // We handle multiple entries if user adds custom ones. 
-  // By default, let's manage one "primary" plan per day but allow adding a custom entry.
   const [localUserData, setLocalUserData] = useState<UserEventData[]>([]);
 
   useEffect(() => {
-    // Initialize user data state
     if (userData && userData.length > 0) {
       setLocalUserData(userData);
     } else {
@@ -46,7 +42,6 @@ export default function EventModal({ isOpen, onClose, date, events, userData, on
     const updated = [...localUserData];
     updated[index] = { ...updated[index], ...fields, updated_at: new Date().toISOString() };
     
-    // Auto-update done_at
     if (fields.done === true) {
       updated[index].done_at = new Date().toISOString();
     }
@@ -87,7 +82,6 @@ export default function EventModal({ isOpen, onClose, date, events, userData, on
 
         <ScrollArea className="flex-1 p-6">
           <div className="space-y-6">
-            {/* Standard Events Info */}
             <div>
               <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">Eventos Oficiais</h3>
               {events.filter(e => e.scope !== "CUSTOM").length === 0 ? (
@@ -111,7 +105,6 @@ export default function EventModal({ isOpen, onClose, date, events, userData, on
 
             <Separator />
 
-            {/* Planning Section */}
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Planejamento de Arte</h3>
