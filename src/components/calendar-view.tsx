@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -25,7 +24,7 @@ export type Event = {
 };
 
 export default function CalendarView() {
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1));
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date(2026, 0, 1));
   const [searchQuery, setSearchQuery] = useState("");
   const [onlyMarked, setOnlyMarked] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -33,9 +32,15 @@ export default function CalendarView() {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    // Ao montar o componente, definimos o mês atual para o dia de hoje
-    // e carregamos os dados do storage local.
-    setCurrentMonth(new Date());
+    // Definimos o mês atual baseado na data real de hoje apenas no cliente
+    const today = new Date();
+    // Se estivermos em 2026, usamos a data real. Se não, forçamos o início de 2026 para visualização.
+    if (today.getFullYear() === 2026) {
+      setCurrentMonth(today);
+    } else {
+      setCurrentMonth(new Date(2026, 0, 1));
+    }
+    
     setStorageData(getStoredData());
     setIsHydrated(true);
   }, []);
@@ -53,7 +58,6 @@ export default function CalendarView() {
     const standardEvents = (eventsDataset as Event[]).filter(e => e.date === dateStr);
     const userData = storageData[dateStr] || [];
     
-    // Merge custom events
     const customEvents = userData
       .filter(u => u.is_custom)
       .map((u, idx) => ({
@@ -78,7 +82,10 @@ export default function CalendarView() {
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const goToday = () => setCurrentMonth(new Date());
+  const goToday = () => {
+    const today = new Date();
+    setCurrentMonth(today.getFullYear() === 2026 ? today : new Date(2026, 0, 1));
+  };
 
   const handleSave = (date: string, events: UserEventData[]) => {
     saveDayData(date, events);
@@ -91,8 +98,6 @@ export default function CalendarView() {
     const stored = getStoredData();
     const standardEvents = eventsDataset as Event[];
     
-    const datesProcessed = new Set<string>();
-
     standardEvents.forEach(e => {
       const uDataArray = stored[e.date] || [];
       const uData = uDataArray[0] || {}; 
@@ -111,7 +116,6 @@ export default function CalendarView() {
         updated_at: uData.updated_at || "",
         done_at: uData.done_at || ""
       });
-      datesProcessed.add(e.date);
     });
 
     Object.entries(stored).forEach(([date, entries]) => {
@@ -139,7 +143,7 @@ export default function CalendarView() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `artes_santafe_2026_${onlyMarked ? 'marcados' : 'todos'}.json`;
+      a.download = `artes_santafe_2026.json`;
       a.click();
     } else {
       const headers = ["date", "title", "scope", "type", "make_art", "done", "description", "is_custom", "updated_at", "done_at"];
@@ -151,12 +155,12 @@ export default function CalendarView() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `artes_santafe_2026_${onlyMarked ? 'marcados' : 'todos'}.csv`;
+      a.download = `artes_santafe_2026.csv`;
       a.click();
     }
   };
 
-  if (!isHydrated) return null;
+  if (!isHydrated) return <div className="min-h-[400px] flex items-center justify-center">Carregando calendário...</div>;
 
   return (
     <div className="space-y-6">
@@ -166,7 +170,7 @@ export default function CalendarView() {
             <Button variant="outline" size="icon" onClick={prevMonth} className="rounded-full">
               <ChevronLeft className="h-5 w-5" />
             </Button>
-            <h2 className="text-xl font-headline font-bold min-w-[150px] text-center capitalize">
+            <h2 className="text-xl font-headline font-bold min-w-[180px] text-center capitalize">
               {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
             </h2>
             <Button variant="outline" size="icon" onClick={nextMonth} className="rounded-full">
@@ -212,14 +216,14 @@ export default function CalendarView() {
           ))}
           
           {Array.from({ length: startOfMonth(currentMonth).getDay() }).map((_, i) => (
-            <div key={`pad-${i}`} className="bg-background min-h-[100px] md:min-h-[120px]" />
+            <div key={`pad-${i}`} className="bg-background min-h-[100px] md:min-h-[120px] opacity-30" />
           ))}
 
           {days.map((day) => {
             const dayEvents = getDayEvents(day);
             const { hasMakeArt, hasDone } = getDayStatus(day);
-            const isDayPast = isPast(day) && !isToday(day);
             const isDayToday = isToday(day);
+            const isDayPast = isPast(day) && !isDayToday;
             
             const filteredEvents = dayEvents.filter(e => 
               e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -236,9 +240,9 @@ export default function CalendarView() {
                   "bg-background p-2 min-h-[100px] md:min-h-[120px] transition-all cursor-pointer hover:bg-primary/10 relative group",
                   isDayPast && "opacity-60 bg-muted/20",
                   isDayToday && "ring-2 ring-inset ring-accent z-10",
-                  hasMakeArt && !hasDone && "bg-primary/20",
+                  hasMakeArt && !hasDone && "bg-primary/10",
                   hasDone && "bg-green-50",
-                  shouldHide && "opacity-20 grayscale"
+                  shouldHide && "opacity-20 grayscale pointer-events-none"
                 )}
               >
                 <div className="flex justify-between items-start mb-1">
@@ -249,7 +253,7 @@ export default function CalendarView() {
                     {format(day, "d")}
                   </span>
                   {hasDone ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-600 animate-in fade-in zoom-in" />
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
                   ) : hasMakeArt ? (
                     <Circle className="h-4 w-4 text-primary fill-primary" />
                   ) : null}
@@ -269,7 +273,7 @@ export default function CalendarView() {
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
-                    <div className="text-[9px] text-muted-foreground font-bold">
+                    <div className="text-[9px] text-muted-foreground font-bold pl-1">
                       +{dayEvents.length - 3} mais
                     </div>
                   )}
