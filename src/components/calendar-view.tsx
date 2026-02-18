@@ -33,16 +33,20 @@ export default function CalendarView() {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
+    // Ao montar o componente, definimos o mês atual para o dia de hoje
+    // e carregamos os dados do storage local.
+    setCurrentMonth(new Date());
     setStorageData(getStoredData());
     setIsHydrated(true);
   }, []);
 
   const days = useMemo(() => {
+    if (!isHydrated) return [];
     return eachDayOfInterval({
       start: startOfMonth(currentMonth),
       end: endOfMonth(currentMonth),
     });
-  }, [currentMonth]);
+  }, [currentMonth, isHydrated]);
 
   const getDayEvents = (day: Date) => {
     const dateStr = format(day, "yyyy-MM-dd");
@@ -85,18 +89,12 @@ export default function CalendarView() {
   const exportData = (type: 'csv' | 'json') => {
     const allEvents: any[] = [];
     const stored = getStoredData();
-
-    // Iterate through 2026 days or just stored data? Requirement says all relevant data.
-    // Let's iterate through standard events and merge with user choices.
     const standardEvents = eventsDataset as Event[];
     
     const datesProcessed = new Set<string>();
 
     standardEvents.forEach(e => {
       const uDataArray = stored[e.date] || [];
-      // If user has data for this specific standard event, we link them. 
-      // Simplification: the UI handles one set of art choices per day mostly.
-      // But let's export per entry.
       const uData = uDataArray[0] || {}; 
 
       if (onlyMarked && !uData.make_art) return;
@@ -116,7 +114,6 @@ export default function CalendarView() {
       datesProcessed.add(e.date);
     });
 
-    // Add customs
     Object.entries(stored).forEach(([date, entries]) => {
       entries.forEach(entry => {
         if (entry.is_custom) {
@@ -214,7 +211,6 @@ export default function CalendarView() {
             </div>
           ))}
           
-          {/* Pre-padding for empty days at start of month */}
           {Array.from({ length: startOfMonth(currentMonth).getDay() }).map((_, i) => (
             <div key={`pad-${i}`} className="bg-background min-h-[100px] md:min-h-[120px]" />
           ))}
@@ -225,13 +221,11 @@ export default function CalendarView() {
             const isDayPast = isPast(day) && !isToday(day);
             const isDayToday = isToday(day);
             
-            // Search filter logic
             const filteredEvents = dayEvents.filter(e => 
               e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
               e.summary.toLowerCase().includes(searchQuery.toLowerCase())
             );
 
-            // Hide days if search/filter active and no match
             const shouldHide = (searchQuery && filteredEvents.length === 0) || (onlyMarked && !hasMakeArt);
 
             return (
