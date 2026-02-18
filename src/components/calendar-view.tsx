@@ -34,7 +34,7 @@ export default function CalendarView() {
   useEffect(() => {
     // Definimos o mês atual baseado na data real de hoje apenas no cliente
     const today = new Date();
-    // Se estivermos em 2026, usamos a data real. Se não, forçamos o início de 2026 para visualização.
+    // Se estivermos em 2026, usamos a data real. Se não, usamos Jan 2026 para planejamento antecipado.
     if (today.getFullYear() === 2026) {
       setCurrentMonth(today);
     } else {

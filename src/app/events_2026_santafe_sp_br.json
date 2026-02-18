@@ -1,4 +1,3 @@
-
 [
   { "id": "br-01-01", "date": "2026-01-01", "title": "Confraternização Universal", "summary": "Ano Novo", "scope": "BR", "type": "HOLIDAY" },
   { "id": "br-02-16", "date": "2026-02-16", "title": "Carnaval", "summary": "Segunda-feira de Carnaval", "scope": "BR", "type": "OPTIONAL" },
