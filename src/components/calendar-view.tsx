@@ -32,7 +32,7 @@ export default function CalendarView() {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    // Definimos o mês atual baseado na data real de hoje apenas no cliente
+    // Definimos o mês atual baseado na data real de hoje apenas no cliente para evitar erros de hidratação
     const today = new Date();
     // Se estivermos em 2026, usamos a data real. Se não, usamos Jan 2026 para planejamento antecipado.
     if (today.getFullYear() === 2026) {
